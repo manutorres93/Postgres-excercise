@@ -11,7 +11,7 @@ DELETE FROM reservations WHERE id = 101;
 
 --CONSULTAS ---
 
--- Ver la lista de espacios de trabajo disponibles de una sala en una sesión x. Por la configuracion de la DB solo hay registros asignados hasta id room=13
+-- Ver la lista de espacios de trabajo disponibles de una sala en una sesión x. 
 
 SELECT * FROM workspaces
 WHERE room_id = 3 
@@ -22,12 +22,24 @@ AND id NOT IN (
 );
 
 
+SELECT w.id AS workspace_id, w.row_num, w.column_num, r.room_name
+FROM workspaces w
+JOIN rooms r ON r.id = w.room_id
+LEFT JOIN reservations res ON res.workspace_id = w.id AND res.session_id = 2
+WHERE w.room_id = 3
+AND res.workspace_id IS NULL;
 
 -- Espacios de trabajo ocupados en una sala para una sesión específica
 SELECT * FROM workspaces
 WHERE room_id = 1 AND id IN (
     SELECT workspace_id FROM reservations WHERE session_id = 1
 );
+
+
+SELECT w.*
+FROM workspaces w
+JOIN reservations res ON res.workspace_id = w.id
+WHERE w.room_id = 1 AND res.session_id = 1;
 
 -- Sesiones ordenadas por las más ocupadas
 SELECT s.id AS session_id, s.description, COUNT(*) AS num_reservations
