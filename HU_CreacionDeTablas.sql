@@ -40,18 +40,4 @@ CREATE TABLE reservations (
     session_id INT REFERENCES sessions(id)
 );
 
-DROP table workspaces;
-DROP table reservations;
 
-DROP table sessions;
-DROP table rooms;
-DROP table users;
-DELETE FROM workspaces;
-
-DELETE FROM reservations;
-
-DELETE FROM sessions;
-
-DELETE FROM rooms;
-
-DELETE FROM users;

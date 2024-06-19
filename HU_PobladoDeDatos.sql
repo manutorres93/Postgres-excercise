@@ -1,4 +1,4 @@
-
+----------------POBLADO DE TABLA USERS --------------------------------
 -- Función para generar un nombre aleatorio
 CREATE OR REPLACE FUNCTION generar_nombre_aleatorio() RETURNS TEXT AS $$
 DECLARE
@@ -55,6 +55,9 @@ END $$;
 -- Consultar todos los registros en la tabla users
 SELECT * FROM users;
 
+
+----------------POBLADO DE TABLA ROOMS ------------------------------
+
 -- Crear una función para poblar la tabla rooms
 CREATE OR REPLACE FUNCTION poblar_rooms() RETURNS VOID AS $$
 DECLARE
@@ -87,31 +90,9 @@ $$ LANGUAGE plpgsql;
 -- Llamar a la función para poblar la tabla rooms
 SELECT poblar_rooms();
 
-CREATE OR REPLACE FUNCTION poblar_workspaces1() RETURNS VOID AS $$
-DECLARE
-    room RECORD;
-    fila CHAR(1);
-    columna INT;
-    i INT;
-BEGIN
-    FOR room IN SELECT * FROM rooms LOOP
-        i := 1;
-        FOR fila IN 0..room.num_rows - 1 LOOP
-            FOR columna IN 1..room.num_columns LOOP
-                INSERT INTO workspaces (room_id, row_num, column_num)
-                VALUES (room.id, CHR(ASCII('A') + fila), columna::VARCHAR);
-                i := i + 1;
-                IF i > room.capacity THEN
-                    EXIT;
-                END IF;
-            END LOOP;
-            IF i > room.capacity THEN
-                EXIT;
-            END IF;
-        END LOOP;
-    END LOOP;
-END;
-$$ LANGUAGE plpgsql;
+
+------------------POBLADO DE TABLA WORKSPACES --------------------------------
+
 
 ---Generar solo 100 registros
 CREATE OR REPLACE FUNCTION poblar_workspaces() RETURNS VOID AS $$
@@ -142,7 +123,6 @@ $$ LANGUAGE plpgsql;
 
 
 
-
 -- Llamar a la función para poblar la tabla workspaces
 SELECT poblar_workspaces();
 
@@ -151,38 +131,7 @@ SELECT * FROM workspaces;
 SELECT COUNT(*) FROM workspaces;
 
 
-CREATE OR REPLACE FUNCTION poblar_sessions1() RETURNS VOID AS $$
-DECLARE
-    room RECORD;
-    fecha DATE;
-    hora_inicio TIME;
-    hora_fin TIME;
-    intentos INT;
-BEGIN
-    FOR room IN SELECT * FROM rooms LOOP
-        intentos := 0;
-        WHILE intentos < 100 LOOP
-            -- Generar una fecha aleatoria en el próximo mes
-            fecha := CURRENT_DATE + (RANDOM() * 30)::INT;
-            -- Generar una hora de inicio aleatoria
-            hora_inicio := TIME '08:00' + (RANDOM() * (TIME '18:00' - TIME '08:00'))::INTERVAL;
-            -- Generar una hora de fin aleatoria (1 a 3 horas después de la hora de inicio)
-            hora_fin := hora_inicio + ((1 + FLOOR(RANDOM() * 3)) || ' hours')::INTERVAL;
-
-            BEGIN
-                -- Intentar insertar la sesión
-                INSERT INTO sessions (room_id, date, start_time, end_time)
-                VALUES (room.id, fecha, hora_inicio, hora_fin);
-                -- Incrementar contador de intentos exitosos
-                intentos := intentos + 1;
-            EXCEPTION WHEN unique_violation THEN
-                -- Ignorar errores de solapamiento y continuar
-                RAISE NOTICE 'Solapamiento detectado: room_id=%, fecha=%, hora_inicio=%, hora_fin=%', room.id, fecha, hora_inicio, hora_fin;
-            END;
-        END LOOP;
-    END LOOP;
-END;
-$$ LANGUAGE plpgsql;
+------------POBLADO DE TABLA SESIONES------------
 
 ---
 CREATE OR REPLACE FUNCTION poblar_sessions() RETURNS VOID AS $$
@@ -233,6 +182,8 @@ SELECT COUNT(*) FROM sessions;
 
 SELECT * FROM sessions;
 
+------------POBLADO DE TABLA RESERVATIONS------------
+
 DO $$
 DECLARE
     user_id INT;
@@ -258,38 +209,7 @@ BEGIN
 END;
 $$;
 
------1--
 
-DO $$
-DECLARE
-    user_id INT;
-    session_id INT;
-    i INT;
-BEGIN
-    FOR i IN 1..100 LOOP
-        -- Generar IDs aleatorios para user y session
-        user_id := (1 + RANDOM() * 99)::INT;
-        session_id := (1 + RANDOM() * 99)::INT;
-
-        -- Obtener los workspaces disponibles para la session_id actual
-        FOR workspace_id IN
-            SELECT ws.id
-            FROM workspaces ws
-            JOIN sessions s ON s.room_id = ws.room_id
-            WHERE s.id = session_id
-        LOOP
-            -- Intentar insertar la reserva
-            BEGIN
-                INSERT INTO reservations (user_id, workspace_id, session_id)
-                VALUES (user_id, workspace_id, session_id);
-            EXCEPTION WHEN foreign_key_violation THEN
-                -- Ignorar errores de violación de clave foránea y continuar
-                RAISE NOTICE 'Violación de clave foránea detectada: user_id=%, workspace_id=%, session_id=%', user_id, workspace_id, session_id;
-            END;
-        END LOOP;
-    END LOOP;
-END;
-$$;
 
 SELECT * FROM reservations;
 

@@ -39,7 +39,7 @@ WHERE room_id = 1 AND id IN (
 SELECT w.*
 FROM workspaces w
 JOIN reservations res ON res.workspace_id = w.id
-WHERE w.room_id = 1 AND res.session_id = 1;
+WHERE w.room_id = 3 AND res.session_id = 2;
 
 -- Sesiones ordenadas por las más ocupadas
 SELECT s.id AS session_id, s.description, COUNT(*) AS num_reservations
